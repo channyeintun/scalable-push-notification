@@ -43,7 +43,7 @@ public class NotificationController {
                 .from(request.getFrom())
                 .payload(payload)
                 .build();
-      emitterService.pushNotification(uniqueToken,notification);
+      emitterService.publish(uniqueToken,notification);
         return ResponseEntity.ok().body("message pushed to uniqueToken " + uniqueToken);
     }
 }

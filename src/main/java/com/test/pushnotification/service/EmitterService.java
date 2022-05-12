@@ -1,46 +1,43 @@
 package com.test.pushnotification.service;
 
 import com.test.pushnotification.model.Notification;
+import com.test.pushnotification.repository.EmitterRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Slf4j
 public class EmitterService {
 
-    private Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
+    private final EmitterRepository repository;
 
-    public void addEmitter(String uniqueToken, SseEmitter emitter) {
-        emitter.onCompletion(() -> emitters.remove(uniqueToken));
-        emitter.onTimeout(() -> emitters.remove(uniqueToken));
-        emitters.put(uniqueToken, emitter);
+    @Autowired
+    public EmitterService(EmitterRepository repository) {
+        this.repository = repository;
     }
 
-    public void pushNotification(String uniqueToken, Notification notification) {
-        log.info("pushing notification for token {}", uniqueToken);
-        if (emitters.containsKey(uniqueToken)) {
-            try {
-                SseEmitter emitter = emitters.get(uniqueToken);
-                if (emitter != null) {
-                    SseEmitter.SseEventBuilder eventBuilder = SseEmitter
-                            .event()
-                            .name(uniqueToken)
-                            .data(notification);
-                    emitter.send(eventBuilder);
-                }
+    public void addEmitter(String uniqueToken, SseEmitter emitter) {
+        emitter.onCompletion(() -> repository.remove(uniqueToken));
+        emitter.onTimeout(() -> repository.remove(uniqueToken));
+        repository.addOrReplaceEmitter(uniqueToken, emitter);
+    }
 
+    public void publish(String uniqueToken, Notification notification) {
+        repository.get(uniqueToken).ifPresentOrElse(sseEmitter -> {
+            try {
+                log.debug("Sending event for token: {}", uniqueToken);
+                sseEmitter.send(SseEmitter
+                        .event()
+                        .name(uniqueToken)
+                        .data(notification));
             } catch (IOException | IllegalStateException e) {
-                emitters.remove(uniqueToken);
+                log.debug("Error while sending for member: {} - exception: {}", uniqueToken, e);
+                repository.remove(uniqueToken);
             }
-        }
+        }, () -> log.debug("No emitter for token {}", uniqueToken));
     }
 }
