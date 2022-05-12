@@ -3,8 +3,6 @@ package com.test.pushnotification.contoller;
 
 import com.test.pushnotification.model.Notification;
 import com.test.pushnotification.payload.NotificationRequest;
-import com.test.pushnotification.payload.RedisNotificationPayload;
-import com.test.pushnotification.redis.RedisMessagePublisher;
 import com.test.pushnotification.service.EmitterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
