@@ -23,9 +23,6 @@ public class NotificationController {
     @Autowired
     private EmitterService emitterService;
 
-    @Autowired
-    private RedisMessagePublisher redisMessagePublisher;
-
     @GetMapping("/subscription")
     public SseEmitter subscribe(@RequestParam("uniqueToken") String uniqueToken) {
         log.info("subscribing...");
@@ -48,9 +45,7 @@ public class NotificationController {
                 .from(request.getFrom())
                 .payload(payload)
                 .build();
-
-        redisMessagePublisher.publish(
-                new RedisNotificationPayload(uniqueToken, request.getFrom(), request.getMessage()));
+      emitterService.pushNotification(uniqueToken,notification);
         return ResponseEntity.ok().body("message pushed to uniqueToken " + uniqueToken);
     }
 }
