@@ -32,8 +32,8 @@ public class NotificationController {
         return sseEmitter;
     }
 
-    @PostMapping("/notification/{uniqueToken}")
-    public ResponseEntity<?> send(@PathVariable String uniqueToken, @RequestBody NotificationRequest request) {
+    @PostMapping("/notification/{uniqueToken}/{eventName}")
+    public ResponseEntity<?> send(@PathVariable String uniqueToken,@PathVariable String eventName, @RequestBody NotificationRequest request) {
         // ...
         // you can save and retrieve uniqueToken of the user from DB, this is just demo
         Map<String, Object> payload = new HashMap<>();
@@ -43,7 +43,7 @@ public class NotificationController {
                 .from(request.getFrom())
                 .payload(payload)
                 .build();
-      emitterService.publish(uniqueToken,notification);
+      emitterService.publish(uniqueToken,notification,eventName);
         return ResponseEntity.ok().body("message pushed to uniqueToken " + uniqueToken);
     }
 }

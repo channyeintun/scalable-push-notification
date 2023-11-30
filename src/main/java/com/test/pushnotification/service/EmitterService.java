@@ -26,13 +26,13 @@ public class EmitterService {
         repository.addOrReplaceEmitter(uniqueToken, emitter);
     }
 
-    public void publish(String uniqueToken, Notification notification) {
+    public void publish(String uniqueToken, Notification notification,String eventName) {
         repository.get(uniqueToken).ifPresentOrElse(sseEmitter -> {
             try {
                 log.debug("Sending event for token: {}", uniqueToken);
                 sseEmitter.send(SseEmitter
                         .event()
-                        .name(uniqueToken)
+                        .name(eventName)
                         .data(notification));
             } catch (IOException | IllegalStateException e) {
                 log.debug("Error while sending for member: {} - exception: {}", uniqueToken, e);
